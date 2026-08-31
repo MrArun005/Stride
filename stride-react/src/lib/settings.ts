@@ -1,8 +1,8 @@
 import type { Settings } from './types';
 
 export const DEFAULTS: Settings = {
-  units: 'km', voice: true, autoPause: true, weeklyGoal: 20, mapStyle: 'dark', keepAwake: true,
-  defaultShoeId: null,
+  units: 'km', voice: true, autoPause: true, weeklyGoal: 20, monthlyGoal: 0, annualGoal: 0,
+  weightKg: 70, mapStyle: 'dark', keepAwake: true, defaultShoeId: null,
 };
 
 export const S: Settings = Object.assign({}, DEFAULTS,

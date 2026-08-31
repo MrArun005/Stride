@@ -1,5 +1,5 @@
 /* IndexedDB wrapper — same schema as the vanilla app, plus a shoes store. */
-const STORES = ['runs', 'active', 'segments', 'efforts', 'shoes'] as const;
+const STORES = ['runs', 'active', 'segments', 'efforts', 'shoes', 'routes', 'photos'] as const;
 export type StoreName = typeof STORES[number];
 
 let _p: Promise<IDBDatabase> | null = null;
@@ -7,7 +7,7 @@ let _p: Promise<IDBDatabase> | null = null;
 function open(): Promise<IDBDatabase> {
   if (_p) return _p;
   _p = new Promise((res, rej) => {
-    const r = indexedDB.open('stride', 3);
+    const r = indexedDB.open('stride', 4);
     r.onupgradeneeded = e => {
       const db = (e.target as IDBOpenDBRequest).result;
       for (const s of STORES)

@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { DB } from './lib/db';
-import type { Run, Segment, Effort, Shoe } from './lib/types';
+import type { Run, Segment, Effort, Shoe, Route, RunPhoto } from './lib/types';
 import { buildSegIndex, matchRunToSegment } from './lib/segments';
 
 let version = 0;
@@ -12,9 +12,10 @@ export function useStore() { return useSyncExternalStore(subscribe, getVersion);
 
 export const data = {
   runs: [] as Run[],              // newest first
-  segments: [] as Segment[],      // newest first
+  segments: [] as Segment[],      // starred first, then newest
   efforts: [] as Effort[],
   shoes: [] as Shoe[],
+  routes: [] as Route[],          // newest first
   toastMsg: '',
   toastN: 0,
 };
@@ -25,12 +26,16 @@ export async function loadRuns() {
   data.runs = (await DB.all<Run>('runs')).sort((a, b) => b.startedAt - a.startedAt);
 }
 export async function loadSegments() {
-  data.segments = (await DB.all<Segment>('segments')).sort((a, b) => b.createdAt - a.createdAt);
+  data.segments = (await DB.all<Segment>('segments'))
+    .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0) || b.createdAt - a.createdAt);
 }
 export async function loadEfforts() { data.efforts = await DB.all<Effort>('efforts'); }
 export async function loadShoes() { data.shoes = await DB.all<Shoe>('shoes'); }
+export async function loadRoutes() {
+  data.routes = (await DB.all<Route>('routes')).sort((a, b) => b.createdAt - a.createdAt);
+}
 export async function loadAll() {
-  await Promise.all([loadRuns(), loadSegments(), loadEfforts(), loadShoes()]);
+  await Promise.all([loadRuns(), loadSegments(), loadEfforts(), loadShoes(), loadRoutes()]);
   emit();
 }
 
@@ -114,10 +119,50 @@ export async function setRunShoe(run: Run, shoeId: number | null) {
   await loadRuns(); emit();
 }
 
+export async function saveRoute(route: Route) {
+  await DB.put('routes', route); await loadRoutes(); emit();
+}
+export async function deleteRoute(id: number) {
+  await DB.del('routes', id); await loadRoutes(); emit();
+}
+
+export async function toggleStar(seg: Segment) {
+  seg.starred = !seg.starred;
+  await DB.put('segments', seg); await loadSegments(); emit();
+}
+
+export async function renameRun(run: Run, name: string) {
+  run.name = name.slice(0, 60) || run.name;
+  await DB.put('runs', run); await loadRuns(); emit();
+}
+
+/* ---- photos (stored as blobs, per run) ---- */
+export async function photosFor(runId: number): Promise<RunPhoto[]> {
+  return (await DB.all<RunPhoto>('photos')).filter(p => p.runId === runId).sort((a, b) => a.ts - b.ts);
+}
+export async function addPhoto(runId: number, file: File): Promise<RunPhoto> {
+  const blob = await compressImage(file, 1600, .82);
+  const photo: RunPhoto = { id: runId + '_' + Date.now(), runId, ts: Date.now(), blob };
+  await DB.put('photos', photo);
+  return photo;
+}
+export async function deletePhoto(id: string) { await DB.del('photos', id); }
+async function compressImage(file: File, maxPx: number, q: number): Promise<Blob> {
+  const bmp = await createImageBitmap(file);
+  const scale = Math.min(1, maxPx / Math.max(bmp.width, bmp.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bmp.width * scale); canvas.height = Math.round(bmp.height * scale);
+  canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  bmp.close();
+  return new Promise(res => canvas.toBlob(b => res(b || file), 'image/jpeg', q));
+}
+
 export async function wipeAll() {
   for (const r of data.runs) await DB.del('runs', r.id);
   for (const e of data.efforts) await DB.del('efforts', e.id);
   for (const g of data.segments) await DB.del('segments', g.id);
+  for (const rt of data.routes) await DB.del('routes', rt.id);
+  for (const p of await DB.all<RunPhoto>('photos')) await DB.del('photos', p.id);
   await loadAll();
 }
 
@@ -128,12 +173,35 @@ if (typeof window !== 'undefined') {
 }
 
 export async function importBackup(json: string): Promise<number> {
-  const parsed = JSON.parse(json) as { runs?: Run[]; segments?: Segment[]; efforts?: Effort[]; shoes?: Shoe[] };
+  const parsed = JSON.parse(json) as {
+    runs?: Run[]; segments?: Segment[]; efforts?: Effort[]; shoes?: Shoe[]; routes?: Route[];
+    photos?: { id: string; runId: number; ts: number; dataUrl: string }[];
+  };
   const runs = parsed.runs || [];
   for (const r of runs) if (r && r.id) await DB.put('runs', r);
   for (const g of (parsed.segments || [])) if (g && g.id) await DB.put('segments', g);
   for (const e of (parsed.efforts || [])) if (e && e.id) await DB.put('efforts', e);
   for (const s of (parsed.shoes || [])) if (s && s.id) await DB.put('shoes', s);
+  for (const rt of (parsed.routes || [])) if (rt && rt.id) await DB.put('routes', rt);
+  for (const ph of (parsed.photos || [])) {
+    if (!ph || !ph.id || !ph.dataUrl) continue;
+    const blob = await (await fetch(ph.dataUrl)).blob();
+    await DB.put('photos', { id: ph.id, runId: ph.runId, ts: ph.ts, blob } satisfies RunPhoto);
+  }
   await loadAll();
   return runs.length;
+}
+
+export async function exportPhotosAsDataUrls(): Promise<{ id: string; runId: number; ts: number; dataUrl: string }[]> {
+  const photos = await DB.all<RunPhoto>('photos');
+  const out: { id: string; runId: number; ts: number; dataUrl: string }[] = [];
+  for (const p of photos) {
+    const dataUrl = await new Promise<string>(res => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result as string);
+      fr.readAsDataURL(p.blob);
+    });
+    out.push({ id: p.id, runId: p.runId, ts: p.ts, dataUrl });
+  }
+  return out;
 }

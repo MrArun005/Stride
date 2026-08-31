@@ -27,6 +27,17 @@ export interface Segment {
   id: number; name: string;
   points: { lat: number; lng: number }[];
   length: number; createdAt: number; fromRunId: number;
+  starred?: boolean;
+}
+
+export interface Route {
+  id: number; name: string;
+  points: { lat: number; lng: number }[];
+  length: number; createdAt: number;
+}
+
+export interface RunPhoto {
+  id: string; runId: number; ts: number; blob: Blob;
 }
 
 export interface Effort {
@@ -43,6 +54,9 @@ export interface Settings {
   voice: boolean;
   autoPause: boolean;
   weeklyGoal: number;
+  monthlyGoal: number;      // 0 = off
+  annualGoal: number;       // 0 = off
+  weightKg: number;
   mapStyle: 'dark' | 'street';
   keepAwake: boolean;
   defaultShoeId?: number | null;

@@ -55,7 +55,7 @@ export function buildSegIndex(segPoints: LatLng[]): SegIndex {
 /* Nearest point on the segment, restricted to a window of progress.
    Restricting by `s` is what stops a looping segment from matching a later part of
    the run onto an earlier part of the line (the classic map-matching failure). */
-function projectNear(idx: SegIndex, x: number, y: number, sMin: number, sMax: number) {
+export function projectNear(idx: SegIndex, x: number, y: number, sMin: number, sMax: number) {
   const cand = idx.grid.get(Math.floor(x / SEG_CELL) + ':' + Math.floor(y / SEG_CELL));
   if (!cand) return { s: -1, perp: Infinity };
   let bs = -1, bp = Infinity;

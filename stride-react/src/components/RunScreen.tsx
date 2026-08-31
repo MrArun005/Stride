@@ -8,6 +8,7 @@ import type { Pt } from '../lib/types';
 import {
   T, useTracker, startRun, pauseRun, resumeRun, finishRun, mapHooks, currentPace, type Fix,
 } from '../lib/tracker';
+import { LIVE } from '../lib/livesegments';
 import { IcoRecenter } from './icons';
 
 /* live trace: chunked polylines coloured by pace relative to the run average */
@@ -196,6 +197,37 @@ export default function RunScreen({ active }: { active: boolean }) {
             <div><div className="k">Avg Pace</div><div className="v num">{fmtPace(avg)}<small>{PACE_UNIT()}</small></div></div>
             <div><div className="k">Now</div><div className="v num">{T.autoPaused ? 'idle' : fmtPace(currentPace())}<small>{PACE_UNIT()}</small></div></div>
           </div>
+          {LIVE.current && running && (
+            <div className="liveseg">
+              <div className="ls-top">
+                <span className="ls-name">⚡ {LIVE.current.name}</span>
+                {LIVE.current.delta != null && (
+                  <span className={'ls-delta num' + (LIVE.current.delta <= 0 ? '' : ' behind')}>
+                    {(LIVE.current.delta <= 0 ? '−' : '+') + Math.abs(Math.round(LIVE.current.delta)) + 's'}
+                    <small>{LIVE.current.delta <= 0 ? ' vs PR' : ' vs PR'}</small>
+                  </span>
+                )}
+                <span className="ls-time num">{fmtDur(LIVE.current.elapsed)}</span>
+              </div>
+              <div className="ls-track">
+                <div className={'ls-bar' + (LIVE.current.delta != null && LIVE.current.delta > 0 ? ' behind' : '')}
+                  style={{ width: (LIVE.current.frac * 100).toFixed(1) + '%' }} />
+              </div>
+            </div>
+          )}
+          {!LIVE.current && LIVE.lastResult && Date.now() - LIVE.lastResult.at < 12000 && running && (
+            <div className="liveseg done">
+              <div className="ls-top">
+                <span className="ls-name">🏁 {LIVE.lastResult.name} · {fmtDur(LIVE.lastResult.dur)}</span>
+                {LIVE.lastResult.delta != null && (
+                  <span className={'ls-delta num' + (LIVE.lastResult.delta <= 0 ? '' : ' behind')}>
+                    {LIVE.lastResult.delta <= 0 ? 'PR! −' + Math.abs(Math.round(LIVE.lastResult.delta)) + 's'
+                      : '+' + Math.round(LIVE.lastResult.delta) + 's'}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           {lastSp && !idle && (
             <div className="lastsplit show">
               <span>{(S.units === 'km' ? 'KM ' : 'MI ') + lastSp.n}</span>

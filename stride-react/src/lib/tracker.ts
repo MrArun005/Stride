@@ -5,7 +5,8 @@ import { haversine } from './geo';
 import { fmtDist } from './format';
 import { speakDur } from './format';
 import { DB } from './db';
-import { saveRun, toast } from '../store';
+import { saveRun, toast, data } from '../store';
+import { initLive, resetLive, liveOnPoint } from './livesegments';
 
 export const ACC_MAX = 30;        // metres — reject fixes worse than this
 export const MAX_SPEED = 11;      // m/s — reject teleport fixes (~40 km/h)
@@ -104,6 +105,7 @@ export function onPosition(pos: GeolocationPosition) {
   } else if (cur.alt != null && T.lastAlt == null) T.lastAlt = cur.alt;
 
   mapHooks.onPoint?.(cur);
+  liveOnPoint(cur);
   checkSplits(prev, cur);
   tEmit();
 }
@@ -186,6 +188,7 @@ export function startRun() {
   T.state = 'running'; T.startedAt = Date.now(); T.tickAnchor = Date.now(); T.lastMoveTs = Date.now();
   T.nextSplit = M_PER_UNIT();
   mapHooks.onReset?.();
+  initLive(data.segments, data.efforts);
   startWatch(); acquireWake(); tEmit();
   if (S.voice && 'speechSynthesis' in window) {
     try { speechSynthesis.speak(new SpeechSynthesisUtterance('Run started. Go.')); } catch { /* no voice */ }
@@ -211,7 +214,7 @@ export async function finishRun() {
   const sec = T.movingMs / 1000;
   releaseWake();
   if (T.dist < 50 || sec < 20) {
-    T.state = 'idle'; await DB.del('active', 1); resetTracker(); mapHooks.onReset?.(); tEmit();
+    T.state = 'idle'; await DB.del('active', 1); resetTracker(); resetLive(); mapHooks.onReset?.(); tEmit();
     toast('Run discarded — too short to save'); return;
   }
   const run: Run = {
@@ -231,7 +234,7 @@ export async function finishRun() {
   const partial = (T.dist % M_PER_UNIT()) / M_PER_UNIT();
   run.partialSplit = partial > 0.05 ? { frac: partial, dur: (T.movingMs - T.lastSplitM) / 1000 } : null;
   await DB.del('active', 1);
-  T.state = 'idle'; resetTracker(); mapHooks.onReset?.(); tEmit();
+  T.state = 'idle'; resetTracker(); resetLive(); mapHooks.onReset?.(); tEmit();
   await saveRun(run);
   onFinished?.(run);
   if (S.voice && 'speechSynthesis' in window) {

@@ -383,3 +383,72 @@ input[type=range]{width:100%;accent-color:#C6FF3D;height:32px;background:transpa
   line-height:1.6;display:flex;gap:10px;align-items:flex-start;box-shadow:0 16px 40px -22px #000}
 .hint b{color:var(--text)}
 .hint button{color:var(--lime);font-weight:800;font-size:10.5px;letter-spacing:.09em;flex:none;margin-left:auto}
+
+/* ---------- live segments (PR ghost racing) ---------- */
+.liveseg{margin-top:10px;background:rgba(16,21,27,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(198,255,61,.3);border-radius:14px;padding:10px 13px;animation:slideUp .45s var(--ease)}
+.liveseg.done{border-color:rgba(255,197,61,.35)}
+.ls-top{display:flex;align-items:baseline;gap:10px}
+.ls-name{flex:1;min-width:0;font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ls-delta{font-size:17px;font-weight:800;color:var(--lime)}
+.ls-delta.behind{color:var(--ember)}
+.ls-delta small{font-family:var(--ui);font-size:9px;color:var(--dim);font-weight:700}
+.ls-time{font-size:14px;color:var(--muted)}
+.ls-track{margin-top:8px;height:5px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.ls-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));
+  box-shadow:0 0 10px -2px rgba(198,255,61,.8);transition:width .4s linear}
+.ls-bar.behind{background:linear-gradient(90deg,#D14B2E,var(--ember))}
+
+/* ---------- flyover ---------- */
+.flybtn{position:absolute;right:12px;bottom:12px;z-index:500;display:flex;align-items:center;gap:6px;
+  padding:8px 13px;border-radius:999px;background:rgba(7,9,12,.8);backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);border:1px solid var(--hair);font-size:11px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--lime)}
+.fly-hud{position:absolute;left:12px;bottom:12px;z-index:500;background:rgba(7,9,12,.82);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--hair);
+  border-radius:12px;padding:8px 12px;display:flex;gap:14px}
+.fly-hud b{font-family:var(--num);font-size:19px;font-weight:800;display:block;line-height:1}
+.fly-hud span{font-size:8px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+
+/* ---------- insights ---------- */
+.insight{display:flex;gap:10px;padding:9px 0;font-size:12.5px;color:var(--muted);line-height:1.5;
+  border-bottom:1px solid var(--hair)}
+.insight:last-child{border-bottom:none}
+.insight .em{flex:none}
+.insight b{color:var(--text)}
+
+/* ---------- photos ---------- */
+.photostrip{display:flex;gap:9px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
+.photostrip .ph{position:relative;flex:none;width:104px;height:104px;border-radius:13px;overflow:hidden;
+  border:1px solid var(--hair);background:var(--surface-2)}
+.photostrip .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.photostrip .ph button{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:8px;
+  background:rgba(7,9,12,.75);color:#FF8163;font-size:12px;font-weight:800;display:grid;place-items:center}
+.photostrip .add{flex:none;width:104px;height:104px;border-radius:13px;border:1.5px dashed var(--line);
+  display:grid;place-items:center;color:var(--dim);font-size:12px;font-weight:700;text-align:center;line-height:1.4}
+
+/* ---------- goal bars ---------- */
+.goalbar{margin-top:12px}
+.goalbar .gb-top{display:flex;align-items:baseline;gap:8px;font-size:12px;font-weight:700;margin-bottom:7px}
+.goalbar .gb-top .num{font-size:16px}
+.goalbar .gb-top .st{margin-left:auto;font-size:11px;font-weight:800}
+.goalbar .gb-track{height:9px;border-radius:99px;background:var(--surface-3);overflow:hidden;position:relative}
+.goalbar .gb-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));
+  transition:width .8s var(--ease)}
+.goalbar .gb-mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(255,255,255,.35);border-radius:2px}
+
+/* ---------- filter chips ---------- */
+.chiprow{display:flex;gap:7px;padding:10px 16px;flex:none;overflow-x:auto}
+.chiprow .chip.on{background:var(--lime);color:#0A0F04}
+
+/* ---------- route planner ---------- */
+.plan-hud{position:absolute;left:12px;top:12px;z-index:500;background:rgba(7,9,12,.82);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--hair);
+  border-radius:12px;padding:8px 12px}
+.plan-hud b{font-family:var(--num);font-size:21px;font-weight:800;display:block;line-height:1}
+.plan-hud span{font-size:8px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.plan-tools{position:absolute;right:12px;top:12px;z-index:500;display:flex;flex-direction:column;gap:8px}
+.plan-tools button{width:40px;height:40px;border-radius:13px;background:rgba(23,30,38,.85);
+  border:1px solid var(--hair);color:var(--text);font-size:15px;display:grid;place-items:center;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.star-on{color:var(--amber)!important}
